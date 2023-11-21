@@ -30,7 +30,7 @@
 }
 
 .selects-derecha select {
-    background-color: #5E5E5E;
+    background-color: var(--button-color);
     font-size: 24px;
     color: white;
     font-weight: bold;

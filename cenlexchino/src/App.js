@@ -1,17 +1,20 @@
 import './App.css';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Header from './components/header/header';
-import Home from './components/home/home';
-import About from './components/about/about';
-import Material from './components/material/material';
+import Home from './components/home/home'; // Import the Home component
+import Administrador from "./components/admin/admin";
 
 function App() {
   return (
-    <>
-      <Header/>
-      <Home/>
-      <About/>
-      <Material/>
-    </>
+    <Router>
+      <>
+        <Header />
+        <Routes>
+          <Route path="/" element={<Home/>} />
+          <Route path="/administrador" element={<Administrador/>} />
+        </Routes>
+      </>
+    </Router>
   );
 }
 

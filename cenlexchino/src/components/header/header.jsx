@@ -43,10 +43,10 @@ function Header() {
           </label>
           <nav className={`navbar ${menuOpen ? 'open' : ''}`}>
             <ul>
-              <li><a href="#home" onClick={closeMenu}>Inicio</a></li>
+              <li><a href="/" onClick={closeMenu}>Inicio</a></li>
               <li><a href="#about" onClick={closeMenu}>Acerca del proyecto</a></li>
               <li><a href="#material" onClick={closeMenu}>Material</a></li>
-              <li><a href="#" onClick={closeMenu}>Administrador</a></li>
+              <li><a href="/administrador" onClick={closeMenu}>Administrador</a></li>
             </ul>
           </nav>
         </div>

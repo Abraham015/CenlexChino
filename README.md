@@ -9,3 +9,5 @@ Repositorio para pagina del CENLEX Zacatenco
 2. Se coloca el apartado de acerca del proyecto.
 3. Se coloca el apartado de material.
 4. Se realizan las pruebas de responsive.
+5. Se realiza el componente de inicio de sesion.
+6. Se coloca lo responsive para el inicio de sesion.
