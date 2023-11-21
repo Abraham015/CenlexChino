@@ -1,0 +1,128 @@
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #fff;
+    position: fixed;
+    background-color: var(--RHeader);
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    font-family: var(--font);
+}
+
+.contenedor {
+    max-width: 1110px;
+    margin: 0 auto;
+    position: fixed;
+    z-index: var(--z-fixed);
+}
+
+.back {
+    padding: 32px 0;
+    background-color: var(--RHeader);
+}
+
+.menu {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 1000;
+}
+
+.logo {
+    font-size: 50px;
+    color: var(--letter);
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.logo:hover {
+    color: var(--hover);
+}
+
+ul{
+    list-style: none;
+}
+
+.menu .navbar ul li {
+    position: relative;
+    float: left;
+}
+
+.menu .navbar ul li a {
+    font-size: 18px;
+    padding: 20px;
+    color: var(--letter);
+    display: block;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.menu .navbar ul li a:hover {
+    color: var(--hover);
+}
+
+#menu {
+    display: none;
+}
+
+.menu-icon {
+    width: 25px;
+}
+
+.menu label {
+    cursor: pointer;
+    display: none;
+}
+
+@media only screen and (max-width: 992px) {
+    .menu {
+        padding: 9px;
+    }
+
+    .menu label {
+        display: initial;
+    }
+
+    .back {
+        padding: 40px 0;
+    }
+
+    .menu .navbar {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background-color: #C9C9C9;
+        display: none;
+    }
+
+    .menu .navbar ul li {
+        width: 100%;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    .menu .navbar ul li:hover {
+        background-color: var(--RHeader);
+    }
+
+    .menu .navbar ul li a {
+        color: var(--RHeader);
+    }
+
+    .menu .navbar ul li a:hover {
+        color: var(--letter);
+    }
+
+    #menu:checked~.navbar {
+        display: initial;
+    }
+
+}

@@ -1,0 +1,75 @@
+.about {
+    width: 100%;
+    height: 100vh;
+    margin: 0 auto;
+    /* Centrar horizontalmente */
+    text-align: center;
+    /* Centrar texto */
+    padding-top: 5rem;
+    background-color: var(--BBackground);
+    align-items: center;
+    font-family: var(--font);
+}
+
+.about__title {
+    font-size: 48px;
+    font-weight: bold;
+    border-bottom: 3px solid #000;
+    display: inline-block;
+    position: relative;
+    left: -450px;
+}
+
+.about__card {
+    max-height: calc(100vh - 200px);
+    /* Altura máxima de la tarjeta (ajustada para el contenido) */
+    overflow-y: auto;
+    /* Agregar scroll vertical si es necesario */
+    border: 1px solid #ccc;
+    /* Borde de la tarjeta */
+    border-radius: 5px;
+    /* Bordes redondeados */
+    padding: 20px;
+    /* Espaciado interior */
+    background-color: #fff;
+    /* Color de fondo de la tarjeta */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    /* Sombra de la tarjeta */
+    margin-top: 1rem;
+    margin-left: 1rem;
+    margin-right: 1rem;
+}
+
+.about__card-content {
+    max-height: 300px;
+    /* Altura máxima para el contenido */
+    /* Agregar scroll vertical si es necesario */
+}
+
+.about__card-content h2 {
+    font-size: 30px;
+    /* Tamaño de fuente del título de la tarjeta */
+    margin-bottom: 10px;
+    /* Espaciado inferior */
+    color: var(--RHeader);
+    font-weight: bold;
+}
+
+.about__card-content p {
+    font-size: 20px;
+    /* Tamaño de fuente del título de la tarjeta */
+    margin-bottom: 10px;
+}
+
+@media screen and (max-width: 480px) {
+    .about__title {
+        position: static;
+        margin-top: 1rem;
+        font-size: 30px;
+    }
+
+    .about__card {
+        max-height: calc(200vh - 100px);
+    }
+
+}
