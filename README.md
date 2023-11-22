@@ -17,3 +17,7 @@ Repositorio para pagina del CENLEX Zacatenco
 2. Se realiza el cambio en la pantalla de inicio.
 3. Se coloca la validación del correo.
 4. Se consigue comunicación con firebase.
+
+>22-11-2023
+1. Se realiza el cambio del header dependiendo si se inicio sesión o no.
+2. Se realiza la pantalla de dashboard para la navegación.

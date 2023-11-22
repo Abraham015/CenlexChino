@@ -1,5 +1,6 @@
 // Login.js
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./admin.css";
 import Swal from "sweetalert2"; 
 import appFirebase from "../firebase/firebase";
@@ -9,6 +10,7 @@ const auth=getAuth(appFirebase);
 const Admin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async(e) => {
     e.preventDefault();
@@ -26,11 +28,7 @@ const Admin = () => {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      Swal.fire({
-        icon: 'success',
-        title: 'Sucess',
-        text: 'Se inicio sesion',
-      });
+      navigate("/dashboard");
     } catch (error) {
       Swal.fire({
         icon: 'error',
