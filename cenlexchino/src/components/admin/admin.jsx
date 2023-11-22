@@ -1,17 +1,44 @@
 // Login.js
 import React, { useState } from "react";
-import "./admin.css"; // Asegúrate de tener el archivo de estilos
+import "./admin.css";
+import Swal from "sweetalert2"; 
+import appFirebase from "../firebase/firebase";
+import {getAuth, signInWithEmailAndPassword} from "firebase/auth";
+const auth=getAuth(appFirebase);
 
-// Cambia el nombre de la función de "admin" a "Admin"
 const Admin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
-    // Aquí puedes agregar la lógica para manejar el inicio de sesión
-    console.log("Email:", email);
-    console.log("Password:", password);
+    
+    // Validar la estructura del correo electrónico con una expresión regular
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Por favor, introduce un correo electrónico válido.",
+      });
+      return;
+    }
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      Swal.fire({
+        icon: 'success',
+        title: 'Sucess',
+        text: 'Se inicio sesion',
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error al iniciar sesión. Verifica tus credenciales.',
+      });
+      console.error('Error de autenticación:', error.message);
+    }
   };
 
   return (
@@ -20,12 +47,12 @@ const Admin = () => {
         <h2>Inicio de sesión</h2>
         <label>Correo</label>
         <input
-          type="email"
+          type="text"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-        <label>Contraseña   </label>
+        <label>Contraseña</label>
         <input
           type="password"
           value={password}

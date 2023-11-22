@@ -8,7 +8,7 @@ const home = () => {
     <>
       <div className="home" id="home">
         <div className="home__content">
-          <h1 className="home__title">BIENVENIDO A CENLEX ZACATENCO</h1>
+          <h1 className="home__title">BIENVENIDO A TU AULA VIRTUAL</h1>
         </div>
       </div>
       <div className="about" id="about">

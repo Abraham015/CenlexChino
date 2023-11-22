@@ -11,3 +11,9 @@ Repositorio para pagina del CENLEX Zacatenco
 4. Se realizan las pruebas de responsive.
 5. Se realiza el componente de inicio de sesion.
 6. Se coloca lo responsive para el inicio de sesion.
+
+>21-11-2023
+1. Se hace el cambio del dominio.
+2. Se realiza el cambio en la pantalla de inicio.
+3. Se coloca la validación del correo.
+4. Se consigue comunicación con firebase.
