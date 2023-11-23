@@ -34,7 +34,7 @@ const Header = () => {
   }, []);
 
   const renderMenuItems = () => {
-    if (isLoggedIn) {
+    if (!!isLoggedIn) {
       return (
         <>
           <li>

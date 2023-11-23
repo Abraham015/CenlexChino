@@ -9,7 +9,7 @@ Repositorio para pagina del CENLEX Zacatenco
 2. Se coloca el apartado de acerca del proyecto.
 3. Se coloca el apartado de material.
 4. Se realizan las pruebas de responsive.
-5. Se realiza el componente de inicio de sesion.
+5. Se realiza el componente fir inicio de sesion.
 6. Se coloca lo responsive para el inicio de sesion.
 
 >21-11-2023
@@ -21,3 +21,5 @@ Repositorio para pagina del CENLEX Zacatenco
 >22-11-2023
 1. Se realiza el cambio del header dependiendo si se inicio sesión o no.
 2. Se realiza la pantalla de dashboard para la navegación.
+3. Se tiene el formulario para crear los planes.
+4. Se completa el formulario para crear los niveles.
