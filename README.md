@@ -23,3 +23,6 @@ Repositorio para pagina del CENLEX Zacatenco
 2. Se realiza la pantalla de dashboard para la navegación.
 3. Se tiene el formulario para crear los planes.
 4. Se completa el formulario para crear los niveles.
+
+>23-11-2023
+1. Se coloca el formulario para crear nuevos documentos.

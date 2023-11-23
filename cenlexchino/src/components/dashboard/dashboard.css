@@ -1,19 +1,27 @@
 .dashboard {
-    padding: 20px;
-    height: 100vh;
-    font-family: var(--font);
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     background-color: var(--BBackground);
+    font-family: var(--font);
+    overflow-y: auto;
 }
 
 .buttons {
-    position: fixed;
-    top: 10px;
-    left: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 1; /* Asegúrate de que los botones estén sobre el contenido */
+    width: 100%;
     display: flex;
+    justify-content: center;
+    padding: 10px; /* Agrega un poco de espacio alrededor de los botones */
+    margin-top: 5rem;
 }
 
 .buttons button {
-    width: fit-content;
+    margin: 5px;
     padding: 20px;
     background-color: var(--button-color);
     color: #fff;
@@ -22,7 +30,6 @@
     cursor: pointer;
     font-weight: bold;
     font-size: 24px;
-    margin-right: 10px; /* Opcional: Agrega margen entre los botones */
 }
 
 .buttons button:hover {
@@ -34,12 +41,8 @@
     border: 1px solid #ccc;
     padding: 20px;
     width: 300px;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    margin: 20px auto; /* Centra horizontalmente el formulario y agrega margen */
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    align-items: center;
 }
 
 .formulario h2 {
@@ -51,14 +54,27 @@
     margin-bottom: 5px;
 }
 
-.formulario input {
+.formulario input,
+.formulario select {
     width: 100%;
     padding: 8px;
     margin-bottom: 10px;
     box-sizing: border-box;
 }
 
+.formulario input[type=file]{
+    font-size: 15px;
+}
+
+
+.formulario label:last-child,
+.formulario input:last-child,
+.formulario select:last-child {
+    margin-bottom: 10px; /* Reducir el margen inferior del último elemento */
+}
+
 .formulario button {
+    margin-top: 10px; /* Añadir un pequeño margen superior al botón */
     background-color: #4caf50;
     color: #fff;
     padding: 10px;
@@ -71,25 +87,23 @@
     background-color: #45a049;
 }
 
-select {    
+select {
     background-color: var(--button-color);
     font-size: 18px;
     color: white;
     font-weight: bold;
     border-radius: 10px;
     padding: 1rem;
-    /* Ajusta el ancho según tus necesidades */
 }
 
 @media screen and (max-width: 600px) {
     .buttons {
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        text-align: center;
+        flex-direction: column;
+        align-items: center;
     }
 
-    .formulario {
+    .buttons button {
         width: 90%;
+        font-size: 18px;
     }
 }

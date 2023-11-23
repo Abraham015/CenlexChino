@@ -3,19 +3,28 @@ import { onAuthStateChanged } from "firebase/auth";
 import { Navigate } from "react-router-dom";
 import appFirebase from "../firebase/firebase";
 import { getAuth } from "firebase/auth";
-import { getFirestore, collection, addDoc, getDocs } from 'firebase/firestore';
-import Swal from "sweetalert2"; 
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
+import Swal from "sweetalert2";
 import "./dashboard.css";
 
 const auth = getAuth(appFirebase);
 
 const Dashboard = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showFormNew, setShowFormNew] = useState(false);
   const [nombrePlan, setNombrePlan] = useState("");
   const [nombreNivel, setNombreNivel] = useState("");
   const [planes, setPlanes] = useState([]);
-  const [selectedPlan, setSelectedPlan] = useState("");
+  const [niveles, setNiveles] = useState([]);
+  const [selectedPlan, setSelectedPlan] = useState('');
+  const [formType, setFormType] = useState("");
+  const [selectedNivel, setSelectedNivel] = useState('');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -27,32 +36,53 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    // Obtener planes desde Firestore
     const fetchPlanes = async () => {
       const db = getFirestore(appFirebase);
-      const planesSnapshot = await getDocs(collection(db, "Plan"));
+      const planesSnapshot = await getDocs(collection(db, 'Plan'));
       const planesData = planesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setPlanes(planesData);
     };
 
     fetchPlanes();
-  }, [showFormNew]);
+  }, []);
 
-  const handleFormSubmitPlan = async (e) => {
+  useEffect(() => {
+    // Consultar niveles asociados al plan seleccionado
+    const fetchNiveles = async () => {
+      if (selectedPlan) {
+        const db = getFirestore(appFirebase);
+        const nivelesQuery = query(
+          collection(db, "Nivel"),
+          where("PlanId", "==", selectedPlan)
+        );
+        const nivelesSnapshot = await getDocs(nivelesQuery);
+        const nivelesData = nivelesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setNiveles(nivelesData);
+      } else {
+        // Si no hay un plan seleccionado, establecer niveles como vacío
+        setNiveles([]);
+      }
+    };
+  
+    fetchNiveles();
+  }, [selectedPlan]);
+  
+
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
 
-    // Validar que el nombre del plan no esté vacío
-    if (!nombrePlan.trim()) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'El nombre del plan no puede estar vacío.',
-      });
-      return;
+    if (formType === "Crear Plan") {
+      await crearPlan(nombrePlan);
+    } else if (formType === "Crear Nivel") {
+      await crearNivel(nombreNivel, selectedPlan);
+    } else if (formType === "Cargar Documentos") {
+      // Lógica para cargar documentos
+    } else if (formType === "Editar") {
+      // Lógica para editar
     }
-
-    // Agregar el nuevo plan a Firestore
-    await crearPlan(nombrePlan);
   };
 
   const crearPlan = async (nombre) => {
@@ -63,123 +93,169 @@ const Dashboard = () => {
         Name: nombre,
       });
       Swal.fire({
-        icon: 'success',
-        title: 'Éxito',
-        text: 'Plan creado con éxito.',
+        icon: "success",
+        title: "Éxito",
+        text: "Plan creado con éxito.",
       });
 
-      // Limpiar el formulario y ocultar el formulario después de agregar el plan
       setNombrePlan("");
-      setShowFormNew(false);
+      setFormType("");
     } catch (error) {
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Error al crear un nuevo plan.',
+        icon: "error",
+        title: "Error",
+        text: "Error al crear un nuevo plan.",
       });
-      console.error('Error al crear el documento:', error);
+      console.error("Error al crear el documento:", error);
     }
   };
 
-  const handleFormSubmitNivel = async (e) => {
-    e.preventDefault();
-
-    // Validar que el nombre del nivel no esté vacío
-    if (!nombreNivel.trim() || !selectedPlan) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'El nombre del nivel y la selección de plan son obligatorios.',
-      });
-      return;
-    }
-
-    // Buscar el nombre del plan seleccionado
-    const selectedPlanObject = planes.find(plan => plan.id === selectedPlan);
-
-    // Agregar el nuevo nivel a Firestore
-    await crearNivel(nombreNivel, selectedPlanObject.Name, selectedPlan);
-  };
-
-  const crearNivel = async (nombreNivel, nombrePlan, selectedPlan) => {
+  const crearNivel = async (nombreNivel, selectedPlan) => {
     const db = getFirestore(appFirebase);
 
     try {
       await addDoc(collection(db, "Nivel"), {
         Name: nombreNivel,
-        Plan: nombrePlan,
         PlanId: selectedPlan,
       });
       Swal.fire({
-        icon: 'success',
-        title: 'Éxito',
-        text: 'Nivel creado con éxito.',
+        icon: "success",
+        title: "Éxito",
+        text: "Nivel creado con éxito.",
       });
 
-      // Limpiar el formulario y ocultar el formulario después de agregar el nivel
       setNombreNivel("");
-      setSelectedPlan("");
-      setShowFormNew(false);
+      setFormType("");
     } catch (error) {
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Error al crear un nuevo nivel.',
+        icon: "error",
+        title: "Error",
+        text: "Error al crear un nuevo nivel.",
       });
-      console.error('Error al crear el documento:', error);
+      console.error("Error al crear el documento:", error);
     }
   };
 
   if (isLoggedIn) {
     return <Navigate to="/" />;
   }
+
+  const handleNivelChange = (e) => {
+    setSelectedNivel(e.target.value);
+  };
+
+  const handlePlanChange = (e) => {
+    const selectedPlanId = e.target.value;
   
+    // Seteamos el plan seleccionado
+    setSelectedPlan(selectedPlanId);
+  
+    // Consultar niveles asociados al plan seleccionado
+    const fetchNiveles = async () => {
+      if (selectedPlanId) {
+        const db = getFirestore(appFirebase);
+        const nivelesQuery = query(
+          collection(db, "Nivel"),
+          where("PlanId", "==", selectedPlanId)
+        );
+        const nivelesSnapshot = await getDocs(nivelesQuery);
+        const nivelesData = nivelesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setNiveles(nivelesData);
+      } else {
+        // Si no hay un plan seleccionado, establecer niveles como vacío
+        setNiveles([]);
+      }
+    };
+  
+    fetchNiveles();
+  };
+  
+
   return (
     <div className="dashboard">
       <div className="buttons">
-        <button onClick={() => setShowFormNew(true)}>Crear Plan</button>
-        <button onClick={() => setShowFormNew(false)}>Crear Nivel</button>
+        <button onClick={() => setFormType("Crear Plan")}>Crear Plan</button>
+        <button onClick={() => setFormType("Crear Nivel")}>Crear Nivel</button>
+        <button onClick={() => setFormType("Cargar Documentos")}>
+          Cargar Documentos
+        </button>
+        <button onClick={() => setFormType("Editar")}>Editar</button>
       </div>
 
-      {showFormNew ? (
+      {formType && (
         <div className="formulario">
-          <h2>Crear Plan</h2>
-          <form onSubmit={handleFormSubmitPlan}>
-            <label>Nombre del Plan</label>
-            <input
-              type="text"
-              value={nombrePlan}
-              onChange={(e) => setNombrePlan(e.target.value)}
-              required
-            />
-            <button type="submit">Crear</button>
-          </form>
-        </div>
-      ) : (
-        <div className="formulario">
-          <h2>Crear Nivel</h2>
-          <form onSubmit={handleFormSubmitNivel}>
-            <label>Nombre del Nivel</label>
-            <input
-              type="text"
-              value={nombreNivel}
-              onChange={(e) => setNombreNivel(e.target.value)}
-              required
-            />
-            <label>Selecciona un Plan</label>
-            <select
-              value={selectedPlan}
-              onChange={(e) => setSelectedPlan(e.target.value)}
-              required
-            >
-            <option value="" disabled>Selecciona un Plan</option>
-              {planes.map((plan) => (
-                <option key={plan.id} value={plan.id}>
-                  {plan.Name}
-                </option>
-              ))}
-            </select>
-            <button type="submit">Crear</button>
+          <h2>{formType}</h2>
+          <form onSubmit={handleFormSubmit}>
+            {formType === "Crear Plan" && (
+              <>
+                <label>Nombre del Plan</label>
+                <input
+                  type="text"
+                  value={nombrePlan}
+                  onChange={(e) => setNombrePlan(e.target.value)}
+                  required
+                />
+              </>
+            )}
+            {formType === "Crear Nivel" && (
+              <>
+                <label>Nombre del Nivel</label>
+                <input
+                  type="text"
+                  value={nombreNivel}
+                  onChange={(e) => setNombreNivel(e.target.value)}
+                  required
+                />
+                <label>Selecciona un Plan</label>
+                <select
+                  value={selectedPlan}
+                  onChange={(e) => setSelectedPlan(e.target.value)}
+                  required
+                >
+                  <option value="" disabled>
+                    Selecciona un Plan
+                  </option>
+                  {planes.map((plan) => (
+                    <option key={plan.id} value={plan.id}>
+                      {plan.Name}
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
+            {formType === "Cargar Documentos" && (
+              <>
+                <label>Selecciona un Plan</label>
+                <select value={selectedPlan} onChange={handlePlanChange}>
+                  <option value="0">Selecciona un plan</option>
+                  {planes.map((plan) => (
+                    <option key={plan.id} value={plan.id}>
+                      {plan.Name}
+                    </option>
+                  ))}
+                </select>
+                <label>Selecciona un Nivel</label>
+                <select value={selectedNivel} onChange={handleNivelChange}>
+                  <option value="0">Selecciona un nivel</option>
+                  {niveles.map((nivel) => (
+                    <option key={nivel.id} value={nivel.id}>
+                      {nivel.Name}
+                    </option>
+                  ))}
+                </select>
+                <label>Selecciona un Archivo</label>
+                <input type="file"/>
+              </>
+            )}
+            {formType === "Editar" && (
+              <>
+                
+              </>
+            )}
+            <button type="submit">Guardar</button>
           </form>
         </div>
       )}

@@ -51,7 +51,7 @@ const Material = () => {
       <p className='material__title'>Material</p>
       <div className="selects-derecha">
         <select value={selectedPlan} onChange={handlePlanChange}>
-          <option value="0" disabled>Selecciona un plan</option>
+          <option value="0">Selecciona un plan</option>
           {planes.map((plan) => (
             <option key={plan.id} value={plan.id}>
               {plan.Name}
@@ -60,7 +60,7 @@ const Material = () => {
         </select>
 
         <select value={selectedNivel} onChange={handleNivelChange}>
-          <option value="0" disabled>Selecciona un nivel</option>
+          <option value="0">Selecciona un nivel</option>
           {niveles.map((nivel) => (
             <option key={nivel.id} value={nivel.id}>
               {nivel.Name}
