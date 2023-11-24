@@ -13,8 +13,10 @@ import {
 } from "firebase/firestore";
 import Swal from "sweetalert2";
 import "./dashboard.css";
+import { ref, uploadBytes, getDownloadURL, getStorage } from "firebase/storage";
 
 const auth = getAuth(appFirebase);
+const storage = getStorage(appFirebase);
 
 const Dashboard = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -22,9 +24,12 @@ const Dashboard = () => {
   const [nombreNivel, setNombreNivel] = useState("");
   const [planes, setPlanes] = useState([]);
   const [niveles, setNiveles] = useState([]);
-  const [selectedPlan, setSelectedPlan] = useState('');
+  const [selectedPlan, setSelectedPlan] = useState("");
   const [formType, setFormType] = useState("");
-  const [selectedNivel, setSelectedNivel] = useState('');
+  const [selectedNivel, setSelectedNivel] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [nombreArchivo, setNombreArchivo] = useState("");
+  const [archivoUrl, setArchivoUrl] = useState("");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -38,8 +43,11 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchPlanes = async () => {
       const db = getFirestore(appFirebase);
-      const planesSnapshot = await getDocs(collection(db, 'Plan'));
-      const planesData = planesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const planesSnapshot = await getDocs(collection(db, "Plan"));
+      const planesData = planesSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       setPlanes(planesData);
     };
 
@@ -66,10 +74,9 @@ const Dashboard = () => {
         setNiveles([]);
       }
     };
-  
+
     fetchNiveles();
   }, [selectedPlan]);
-  
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
@@ -79,10 +86,46 @@ const Dashboard = () => {
     } else if (formType === "Crear Nivel") {
       await crearNivel(nombreNivel, selectedPlan);
     } else if (formType === "Cargar Documentos") {
-      // Lógica para cargar documentos
+      await crearDocumento(selectedNivel, selectedPlan);
     } else if (formType === "Editar") {
       // Lógica para editar
     }
+  };
+
+  const crearDocumento = async () => {
+    const db = getFirestore(appFirebase);
+    //if (selectedFile && selectedNivel) {
+      try {
+        const collectionRef = collection(db, "Material");
+        await addDoc(collectionRef, {
+          PlanId: selectedPlan,
+          NivelId: selectedNivel,
+          ArchivoId: archivoUrl,
+          ArchivoName: nombreArchivo,
+        });
+        Swal.fire({
+          icon: "success",
+          title: "Éxito",
+          text: "Documento guardado con éxito.",
+        });
+        setSelectedPlan("");
+        setSelectedNivel("");
+        setSelectedFile("");
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Error al guardar el documento.",
+        });
+        console.error("Error al crear el documento:", error);
+      }
+    /*} else {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Selecciona ambos campos.",
+      });
+    }*/
   };
 
   const crearPlan = async (nombre) => {
@@ -144,12 +187,35 @@ const Dashboard = () => {
     setSelectedNivel(e.target.value);
   };
 
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    const archivo = e.target.files[0];
+    const storageRef = ref(storage, "archivos"); // Asegúrate de que 'storage' esté definido
+    const archivoRef = ref(storageRef, file.name); // Utiliza 'ref' en lugar de 'child'
+    await uploadBytes(archivoRef, file);
+
+    // Obtener el enlace de descarga del archivo
+    const Url = await getDownloadURL(archivoRef);
+    setArchivoUrl(Url);
+    setNombreArchivo(archivo.name);
+    // Convierte el archivo a Base64
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64Data = reader.result;
+
+      // Actualiza el estado con los datos del archivo
+      setSelectedFile(base64Data);
+    };
+
+    reader.readAsDataURL(file);
+  };
+
   const handlePlanChange = (e) => {
     const selectedPlanId = e.target.value;
-  
+
     // Seteamos el plan seleccionado
     setSelectedPlan(selectedPlanId);
-  
+
     // Consultar niveles asociados al plan seleccionado
     const fetchNiveles = async () => {
       if (selectedPlanId) {
@@ -169,10 +235,9 @@ const Dashboard = () => {
         setNiveles([]);
       }
     };
-  
+
     fetchNiveles();
   };
-  
 
   return (
     <div className="dashboard">
@@ -247,14 +312,10 @@ const Dashboard = () => {
                   ))}
                 </select>
                 <label>Selecciona un Archivo</label>
-                <input type="file"/>
+                <input type="file" onChange={handleFileChange} />
               </>
             )}
-            {formType === "Editar" && (
-              <>
-                
-              </>
-            )}
+            {formType === "Editar" && <></>}
             <button type="submit">Guardar</button>
           </form>
         </div>

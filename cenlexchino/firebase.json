@@ -12,6 +12,12 @@
         "destination": "/index.html"
       }
     ],
-    "project": "cz-chino"
+    "project": "cz-chino",
+    "rules": {
+      "rules": {
+        ".read": "auth == null",
+        ".write": "auth != null"
+      }
+    }
   }
 }

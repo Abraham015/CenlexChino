@@ -41,6 +41,42 @@
     /* Ajusta el ancho según tus necesidades */
 }
 
+.tarjetas-documentos {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    margin-top: 20px;
+    /* Ajusta según sea necesario */
+}
+
+/* Estilos para la tarjeta del documento */
+/* Estilos para la tarjeta del documento */
+.tarjeta-documento {
+    border: 1px solid #ccc;
+    background-color: white;
+    padding: 10px;
+    margin: 10px;
+    max-width: 500px;
+    /* Ajusta el ancho máximo según tus necesidades */
+    text-align: center;
+    overflow: hidden;
+    /* Evita que el contenido sobresalga de la tarjeta */
+    white-space: nowrap;
+    /* Evita el desbordamiento de texto a la siguiente línea */
+}
+
+/* Estilos para el nombre del archivo dentro de la tarjeta */
+.tarjeta-documento h3 {
+    margin: 0;
+    /* Elimina el margen del encabezado para evitar espacios innecesarios */
+    font-size: 16px;
+    /* Ajusta el tamaño de la fuente según tus necesidades */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /* Agrega puntos suspensivos (...) al final si el texto es demasiado largo */
+}
+
+
 @media only screen and (max-width: 768px) {
     .material__title {
         font-size: 30px;

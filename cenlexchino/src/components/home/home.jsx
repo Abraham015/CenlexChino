@@ -16,6 +16,7 @@ const Home = () => {
   const [niveles, setNiveles] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState("");
   const [selectedNivel, setSelectedNivel] = useState("");
+  const [documentos, setDocumentos] = useState([]);
 
   useEffect(() => {
     const fetchPlanes = async () => {
@@ -58,10 +59,35 @@ const Home = () => {
         setNiveles([]);
       }
     };
-  
+
     fetchNiveles();
   }, [selectedPlan]);
-  
+
+  useEffect(() => {
+    // Consultar documentos asociados al nivel y plan seleccionados
+    const fetchDocumentos = async () => {
+      if (selectedNivel) {
+        const db = getFirestore(appFirebase);
+        const documentosQuery = query(
+          collection(db, "Material"),
+          where("PlanId", "==", selectedPlan),
+          where("NivelId", "==", selectedNivel)
+        );
+        const documentosSnapshot = await getDocs(documentosQuery);
+        const documentosData = documentosSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        console.log("Documents Data:", documentosData); // Agrega este log
+        setDocumentos(documentosData);
+      } else {
+        // Si no hay un nivel seleccionado, establecer documentos como vacío
+        setDocumentos([]);
+      }
+    };
+
+    fetchDocumentos();
+  }, [selectedNivel, selectedPlan]);
 
   const handlePlanChange = (e) => {
     setSelectedPlan(e.target.value);
@@ -94,28 +120,45 @@ const Home = () => {
           </div>
         </div>
       </div>
-      <div className='material' id='material'>
-      <p className='material__title'>Material</p>
-      <div className="selects-derecha">
-        <select value={selectedPlan} onChange={handlePlanChange}>
-          <option value="0">Selecciona un plan</option>
-          {planes.map((plan) => (
-            <option key={plan.id} value={plan.id}>
-              {plan.Name}
-            </option>
-          ))}
-        </select>
+      <div className="material" id="material">
+        <p className="material__title">Material</p>
+        <div className="selects-derecha">
+          <select value={selectedPlan} onChange={handlePlanChange}>
+            <option value="0">Selecciona un plan</option>
+            {planes.map((plan) => (
+              <option key={plan.id} value={plan.id}>
+                {plan.Name}
+              </option>
+            ))}
+          </select>
 
-        <select value={selectedNivel} onChange={handleNivelChange}>
-          <option value="0">Selecciona un nivel</option>
-          {niveles.map((nivel) => (
-            <option key={nivel.id} value={nivel.id}>
-              {nivel.Name}
-            </option>
-          ))}
-        </select>
+          <select value={selectedNivel} onChange={handleNivelChange}>
+            <option value="0">Selecciona un nivel</option>
+            {niveles.map((nivel) => (
+              <option key={nivel.id} value={nivel.id}>
+                {nivel.Name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {documentos.length > 0 && (
+          <div className="tarjetas-documentos">
+            {documentos.map((documento) => (
+              <div key={documento.id} className="tarjeta-documento">
+                <h3>{documento.ArchivoName}</h3>
+                <a
+                  href={documento.ArchivoId} // Reemplaza 'URL' con el campo que almacena la ubicación del archivo
+                  download={documento.ArchivoName} // Establece el nombre del archivo para la descarga
+                  className="descargar-icono"
+                >
+                  <i className="fas fa-download"></i>
+                </a>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-    </div>
     </>
   );
 };
