@@ -17,6 +17,8 @@ const Home = () => {
   const [selectedPlan, setSelectedPlan] = useState("");
   const [selectedNivel, setSelectedNivel] = useState("");
   const [documentos, setDocumentos] = useState([]);
+  const [secciones, setSecciones] = useState([]);
+  const [section, setSection] = useState([]);
 
   useEffect(() => {
     const fetchPlanes = async () => {
@@ -30,6 +32,20 @@ const Home = () => {
     };
 
     fetchPlanes();
+  }, []);
+
+  useEffect(() => {
+    const fetchSections = async () => {
+      const db = getFirestore(appFirebase);
+      const planesSnapshot = await getDocs(collection(db, "Secciones"));
+      const planesData = planesSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setSection(planesData);
+    };
+
+    fetchSections();
   }, []);
 
   useEffect(() => {
@@ -89,6 +105,51 @@ const Home = () => {
     fetchDocumentos();
   }, [selectedNivel, selectedPlan]);
 
+  useEffect(() => {
+    const obtenerDatosDesdeFirebase = async () => {
+      try {
+        // Obtener documentos desde Firestore
+        const db = getFirestore(appFirebase);
+        const docsSnapshot = await getDocs(collection(db, "Material"));
+        const docsData = docsSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setDocumentos(docsData);
+
+        // Obtener secciones desde Firestore
+        const secSnapshot = await getDocs(collection(db, "Secciones"));
+        const secData = secSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setSecciones(secData);
+      } catch (error) {
+        console.error("Error al obtener datos desde Firebase:", error);
+      }
+    };
+
+    obtenerDatosDesdeFirebase();
+  }, []);
+
+  const documentosPorSeccion = documentos.reduce((acc, documento) => {
+    const seccion = section.find((s) => s.id === documento.SectionId);
+    console.log("Documento:", documento);
+    console.log("Sección correspondiente:", seccion);
+    if (seccion) {
+      if (!acc[seccion.id]) {
+        acc[seccion.id] = {
+          seccion: seccion,
+          documentos: [],
+        };
+      }
+
+      acc[seccion.id].documentos.push(documento);
+    }
+
+    return acc;
+  }, {});
+
   const handlePlanChange = (e) => {
     setSelectedPlan(e.target.value);
   };
@@ -143,19 +204,28 @@ const Home = () => {
         </div>
 
         {documentos.length > 0 && (
-          <div className="tarjetas-documentos">
-            {documentos.map((documento) => (
-              <div key={documento.id} className="tarjeta-documento">
-                <h3>{documento.ArchivoName}</h3>
-                <a
-                  href={documento.ArchivoId} // Reemplaza 'URL' con el campo que almacena la ubicación del archivo
-                  download={documento.ArchivoName} // Establece el nombre del archivo para la descarga
-                  className="descargar-icono"
-                >
-                  <i className="fas fa-download"></i>
-                </a>
-              </div>
-            ))}
+          <div className="materials ">
+            {Object.values(documentosPorSeccion).map(
+              ({ seccion, documentos }) => (
+                <div key={seccion?.id ?? "defaultKey"}>
+                  <h2>{seccion?.Name ?? "Nombre no disponible"}</h2>
+                  <div className="tarjetas-documentos">
+                    {documentos.map((documento) => (
+                      <div key={documento.id} className="tarjeta-documento">
+                        <h3>{documento.ArchivoName}</h3>
+                        <a
+                          href={documento.ArchivoId}
+                          download={documento.ArchivoName}
+                          className="descargar-icono"
+                        >
+                          <i className="fas fa-download"></i>
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            )}
           </div>
         )}
       </div>

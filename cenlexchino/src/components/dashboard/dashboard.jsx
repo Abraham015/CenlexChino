@@ -24,9 +24,11 @@ const Dashboard = () => {
   const [nombreNivel, setNombreNivel] = useState("");
   const [planes, setPlanes] = useState([]);
   const [niveles, setNiveles] = useState([]);
+  const [section, setSection] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState("");
   const [formType, setFormType] = useState("");
   const [selectedNivel, setSelectedNivel] = useState("");
+  const [selectedSection, setSelectedSection] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [nombreArchivo, setNombreArchivo] = useState("");
   const [archivoUrl, setArchivoUrl] = useState("");
@@ -52,6 +54,20 @@ const Dashboard = () => {
     };
 
     fetchPlanes();
+  }, []);
+
+  useEffect(() => {
+    const fetchSections = async () => {
+      const db = getFirestore(appFirebase);
+      const planesSnapshot = await getDocs(collection(db, "Secciones"));
+      const planesData = planesSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setSection(planesData);
+    };
+
+    fetchSections();
   }, []);
 
   useEffect(() => {
@@ -90,42 +106,6 @@ const Dashboard = () => {
     } else if (formType === "Editar") {
       // Lógica para editar
     }
-  };
-
-  const crearDocumento = async () => {
-    const db = getFirestore(appFirebase);
-    //if (selectedFile && selectedNivel) {
-      try {
-        const collectionRef = collection(db, "Material");
-        await addDoc(collectionRef, {
-          PlanId: selectedPlan,
-          NivelId: selectedNivel,
-          ArchivoId: archivoUrl,
-          ArchivoName: nombreArchivo,
-        });
-        Swal.fire({
-          icon: "success",
-          title: "Éxito",
-          text: "Documento guardado con éxito.",
-        });
-        setSelectedPlan("");
-        setSelectedNivel("");
-        setSelectedFile("");
-      } catch (error) {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "Error al guardar el documento.",
-        });
-        console.error("Error al crear el documento:", error);
-      }
-    /*} else {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Selecciona ambos campos.",
-      });
-    }*/
   };
 
   const crearPlan = async (nombre) => {
@@ -187,9 +167,47 @@ const Dashboard = () => {
     setSelectedNivel(e.target.value);
   };
 
+  const handleSectionChange = (e) => {
+    setSelectedSection(e.target.value);
+  };
+
+  const crearDocumento = async () => {
+    const db = getFirestore(appFirebase);
+    //if (selectedFile && selectedNivel) {
+    try {
+      const collectionRef = collection(db, "Material");
+      await addDoc(collectionRef, {
+        PlanId: selectedPlan,
+        NivelId: selectedNivel,
+        ArchivoId: archivoUrl,
+        ArchivoName: nombreArchivo,
+        SectionId: selectedSection,
+      });
+      Swal.fire({
+        icon: "success",
+        title: "Éxito",
+        text: "Documento guardado con éxito.",
+      });
+      setSelectedPlan("");
+      setSelectedNivel("");
+      setSelectedFile(null);
+      setSelectedSection("");
+      setArchivoUrl("");
+      setNombreArchivo("");
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Error al guardar el documento.",
+      });
+      console.error("Error al crear el documento:", error);
+    }
+  };
+
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     const archivo = e.target.files[0];
+    setSelectedFile(archivo);
     const storageRef = ref(storage, "archivos"); // Asegúrate de que 'storage' esté definido
     const archivoRef = ref(storageRef, file.name); // Utiliza 'ref' en lugar de 'child'
     await uploadBytes(archivoRef, file);
@@ -208,6 +226,7 @@ const Dashboard = () => {
     };
 
     reader.readAsDataURL(file);
+    setSelectedFile(null);
   };
 
   const handlePlanChange = (e) => {
@@ -308,6 +327,15 @@ const Dashboard = () => {
                   {niveles.map((nivel) => (
                     <option key={nivel.id} value={nivel.id}>
                       {nivel.Name}
+                    </option>
+                  ))}
+                </select>
+                <label>Selecciona una Sección</label>
+                <select value={selectedSection} onChange={handleSectionChange}>
+                  <option value="0">Selecciona una sección</option>
+                  {section.map((sec) => (
+                    <option key={sec.id} value={sec.id}>
+                      {sec.Name}
                     </option>
                   ))}
                 </select>

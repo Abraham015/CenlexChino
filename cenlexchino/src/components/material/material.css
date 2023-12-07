@@ -41,6 +41,10 @@
     /* Ajusta el ancho según tus necesidades */
 }
 
+.materials h2{
+    margin-bottom: -2px;
+}
+
 .tarjetas-documentos {
     display: flex;
     flex-wrap: wrap;
@@ -69,11 +73,15 @@
 .tarjeta-documento h3 {
     margin: 0;
     /* Elimina el margen del encabezado para evitar espacios innecesarios */
-    font-size: 16px;
+    font-size: 22px;
     /* Ajusta el tamaño de la fuente según tus necesidades */
     overflow: hidden;
     text-overflow: ellipsis;
     /* Agrega puntos suspensivos (...) al final si el texto es demasiado largo */
+}
+
+.tarjeta-documento i {
+    font-size: 22px;
 }
 
 
