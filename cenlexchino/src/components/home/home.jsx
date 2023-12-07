@@ -89,11 +89,20 @@ const Home = () => {
           where("PlanId", "==", selectedPlan),
           where("NivelId", "==", selectedNivel)
         );
+        // Obtener secciones desde Firestore
+        const secSnapshot = await getDocs(collection(db, "Secciones"));
+        const secData = secSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setSecciones(secData);
+
         const documentosSnapshot = await getDocs(documentosQuery);
         const documentosData = documentosSnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
+
         console.log("Documents Data:", documentosData); // Agrega este log
         setDocumentos(documentosData);
       } else {
@@ -105,7 +114,7 @@ const Home = () => {
     fetchDocumentos();
   }, [selectedNivel, selectedPlan]);
 
-  useEffect(() => {
+  /*useEffect(() => {
     const obtenerDatosDesdeFirebase = async () => {
       try {
         // Obtener documentos desde Firestore
@@ -130,7 +139,7 @@ const Home = () => {
     };
 
     obtenerDatosDesdeFirebase();
-  }, []);
+  }, []);*/
 
   const documentosPorSeccion = documentos.reduce((acc, documento) => {
     const seccion = section.find((s) => s.id === documento.SectionId);
