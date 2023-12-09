@@ -10,10 +10,14 @@ import {
   getDocs,
   query,
   where,
+  getDoc,
+  doc,
+  deleteDoc,
+  updateDoc
 } from "firebase/firestore";
 import Swal from "sweetalert2";
 import "./dashboard.css";
-import { ref, uploadBytes, getDownloadURL, getStorage } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL, getStorage, getMetadata } from "firebase/storage";
 
 const auth = getAuth(appFirebase);
 const storage = getStorage(appFirebase);
@@ -32,6 +36,12 @@ const Dashboard = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [nombreArchivo, setNombreArchivo] = useState("");
   const [archivoUrl, setArchivoUrl] = useState("");
+  const [documentos, setDocumentos] = useState([]);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [selectedDocumento, setSelectedDocumento] = useState(null);
+  const [selectedPlanId, setSelectedPlanId] = useState(""); // Estado para el plan seleccionado
+  const [selectedNivelId, setSelectedNivelId] = useState(""); // Estado para el nivel seleccionado
+  const [reloadData, setReloadData] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -54,6 +64,20 @@ const Dashboard = () => {
     };
 
     fetchPlanes();
+  }, []);
+
+  useEffect(() => {
+    const fetchSections = async () => {
+      const db = getFirestore(appFirebase);
+      const planesSnapshot = await getDocs(collection(db, "Secciones"));
+      const planesData = planesSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setSection(planesData);
+    };
+
+    fetchSections();
   }, []);
 
   useEffect(() => {
@@ -94,6 +118,55 @@ const Dashboard = () => {
     fetchNiveles();
   }, [selectedPlan]);
 
+  useEffect(() => {
+    const obtenerDatosDesdeFirebase = async () => {
+      try {
+        // Obtener documentos desde Firestore
+        const db = getFirestore(appFirebase);
+        const docsSnapshot = await getDocs(collection(db, "Material"));
+        const docsData = docsSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        // Obtener información adicional de planes, niveles y secciones
+        const planesSnapshot = await getDocs(collection(db, "Plan"));
+        const planesData = planesSnapshot.docs.reduce((acc, doc) => {
+          acc[doc.id] = doc.data().Name;
+          return acc;
+        }, {});
+
+        const nivelesSnapshot = await getDocs(collection(db, "Nivel"));
+        const nivelesData = nivelesSnapshot.docs.reduce((acc, doc) => {
+          acc[doc.id] = doc.data().Name;
+          return acc;
+        }, {});
+
+        const seccionesSnapshot = await getDocs(collection(db, "Secciones"));
+        const seccionesData = seccionesSnapshot.docs.reduce((acc, doc) => {
+          acc[doc.id] = doc.data().Name;
+          return acc;
+        }, {});
+
+        // Actualizar estado con documentos y datos adicionales
+        setDocumentos(
+          docsData.map((doc) => ({
+            ...doc,
+            PlanName: planesData[doc.PlanId] || "Nombre no disponible",
+            NivelName: nivelesData[doc.NivelId] || "Nombre no disponible",
+            SeccionName: seccionesData[doc.SectionId] || "Nombre no disponible",
+          }))
+        );
+      } catch (error) {
+        console.error("Error al obtener datos desde Firebase:", error);
+      }
+    };
+
+    obtenerDatosDesdeFirebase();
+  }, []);
+
+  // Se ejecuta solo al montar el componente
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
 
@@ -119,6 +192,9 @@ const Dashboard = () => {
         icon: "success",
         title: "Éxito",
         text: "Plan creado con éxito.",
+      }).then(() => {
+        // eslint-disable-next-line no-restricted-globals
+        location.reload();
       });
 
       setNombrePlan("");
@@ -145,6 +221,9 @@ const Dashboard = () => {
         icon: "success",
         title: "Éxito",
         text: "Nivel creado con éxito.",
+      }).then(() => {
+        // eslint-disable-next-line no-restricted-globals
+        location.reload();
       });
 
       setNombreNivel("");
@@ -158,6 +237,21 @@ const Dashboard = () => {
       console.error("Error al crear el documento:", error);
     }
   };
+
+  const documentosPorSeccion = documentos.reduce((acc, documento) => {
+    const seccion = documento.SectionId; // Ajusta según la estructura de tus documentos
+
+    if (!acc[seccion]) {
+      acc[seccion] = {
+        seccion: seccion,
+        documentos: [],
+      };
+    }
+
+    acc[seccion].documentos.push(documento);
+
+    return acc;
+  }, {});
 
   if (isLoggedIn) {
     return <Navigate to="/" />;
@@ -186,7 +280,10 @@ const Dashboard = () => {
       Swal.fire({
         icon: "success",
         title: "Éxito",
-        text: "Documento guardado con éxito.",
+        text: "Documento agregado con éxito.",
+      }).then(() => {
+        // eslint-disable-next-line no-restricted-globals
+        location.reload();
       });
       setSelectedPlan("");
       setSelectedNivel("");
@@ -208,26 +305,41 @@ const Dashboard = () => {
     const file = e.target.files[0];
     const archivo = e.target.files[0];
     setSelectedFile(archivo);
-    const storageRef = ref(storage, "archivos"); // Asegúrate de que 'storage' esté definido
-    const archivoRef = ref(storageRef, file.name); // Utiliza 'ref' en lugar de 'child'
-    await uploadBytes(archivoRef, file);
-
-    // Obtener el enlace de descarga del archivo
-    const Url = await getDownloadURL(archivoRef);
-    setArchivoUrl(Url);
-    setNombreArchivo(archivo.name);
+  
+    const storageRef = ref(storage, "archivos");
+    const archivoRef = ref(storageRef, file.name);
+  
+    // Verificar si el archivo ya existe
+    try {
+      await getMetadata(archivoRef);
+      // El archivo ya existe, obtén el enlace de descarga y actualiza el estado
+      const Url = await getDownloadURL(archivoRef);
+      setArchivoUrl(Url);
+      setNombreArchivo(file.name);
+    } catch (error) {
+      // El archivo no existe, procede a subirlo
+      await uploadBytes(archivoRef, file);
+  
+      // Obtener el enlace de descarga del archivo
+      const Url = await getDownloadURL(archivoRef);
+      setArchivoUrl(Url);
+      setNombreArchivo(file.name);
+    }
+  
     // Convierte el archivo a Base64
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64Data = reader.result;
-
+  
       // Actualiza el estado con los datos del archivo
       setSelectedFile(base64Data);
     };
-
+  
     reader.readAsDataURL(file);
     setSelectedFile(null);
   };
+  
+  
 
   const handlePlanChange = (e) => {
     const selectedPlanId = e.target.value;
@@ -258,6 +370,93 @@ const Dashboard = () => {
     fetchNiveles();
   };
 
+  const handleEditar = async (documento) => {
+    setFormType("Editar");
+    setSelectedDocumento(documento);
+    const db = getFirestore(appFirebase);
+    const nivelSnapshot = await getDocs(collection(db, "Nivel"));
+    const nivelData = nivelSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    console.log("Niveles recuperados:", nivelData);
+    setNiveles(nivelData);
+  };
+
+  const handleEliminar = async (documento) => {
+    if (!documento || !documento.id) {
+      console.error("Error: documento.id is not defined");
+      return;
+    }
+  
+    try {
+      const db = getFirestore(appFirebase);
+      const docRef = doc(collection(db, "Material"), documento.id);
+  
+      await deleteDoc(docRef);
+  
+      Swal.fire({
+        icon: "success",
+        title: "Éxito",
+        text: "Documento eliminado con éxito.",
+      }).then(() => {
+        // eslint-disable-next-line no-restricted-globals
+        location.reload();
+      });
+  
+      // Puedes realizar alguna lógica adicional después de eliminar
+      // por ejemplo, actualizar el estado o recargar datos si es necesario.
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Error al eliminar el documento.",
+      });
+      console.error("Error al eliminar el documento:", error);
+    }
+  };
+  
+
+  const handleConfirm = async (e) => {
+    e.preventDefault(); 
+    try {
+      const db = getFirestore(appFirebase);
+      const docRef = doc(db, 'Material', selectedDocumento.id);
+  
+      const existingDoc = await getDoc(docRef);
+  
+      // Actualizar el documento
+      if (existingDoc.exists()) {
+        console.log('selectedDocumento:', selectedDocumento);
+        console.log('existingDoc.data():', existingDoc.data());
+  
+        await updateDoc(docRef, {
+          PlanId: selectedDocumento.PlanId,
+          NivelId: selectedDocumento.NivelId,
+          SectionId: selectedDocumento.SectionId,
+          ArchivoId: selectedDocumento.ArchivoId,
+          ArchivoName: selectedDocumento.ArchivoName,
+        });
+  
+        // Mostrar el SweetAlert solo después de la actualización exitosa
+        Swal.fire({
+          icon: "success",
+          title: "Éxito",
+          text: "Documento actualizado con éxito.",
+        }).then(() => {
+          // eslint-disable-next-line no-restricted-globals
+          location.reload();
+        });
+        
+        console.log('Documento actualizado con éxito');
+      } else {
+        console.log('El documento no existe');
+      }
+    } catch (error) {
+      console.error('Error al actualizar el documento:', error);
+    }
+  };
+  
   return (
     <div className="dashboard">
       <div className="buttons">
@@ -343,8 +542,130 @@ const Dashboard = () => {
                 <input type="file" onChange={handleFileChange} />
               </>
             )}
-            {formType === "Editar" && <></>}
+            {formType === "Editar" && documentos.length > 0 && (
+              <div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Plan</th>
+                      <th>Nivel</th>
+                      <th>Sección</th>
+                      <th>Archivo</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {documentos.map((documento) => (
+                      <tr key={documento.id}>
+                        <td>{documento.PlanName}</td>
+                        <td>{documento.NivelName}</td>
+                        <td>{documento.SeccionName}</td>
+                        <td>{documento.ArchivoName}</td>
+                        <td>
+                          <button onClick={() => handleEditar(documento)}>
+                            Editar
+                          </button>
+                          <button onClick={() => handleEliminar(documento)}>
+                            Eliminar
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
             <button type="submit">Guardar</button>
+          </form>
+        </div>
+      )}
+      {formType === "Editar" && selectedDocumento && (
+        <div className="formulario">
+          <h2>Editar Documento</h2>
+          <form onSubmit={handleConfirm}>
+            <label>Selecciona un Plan</label>
+            <select
+              value={selectedDocumento.PlanId}
+              onChange={(e) => {
+                const planId = e.target.value;
+                setSelectedDocumento((prev) => ({
+                  ...prev,
+                  PlanId: planId,
+                }));
+                setSelectedPlanId(planId); // Establecer el plan seleccionado
+              }}
+              required
+            >
+              <option value="" disabled>
+                Selecciona un Plan
+              </option>
+              {planes.map((plan) => (
+                <option key={plan.id} value={plan.id}>
+                  {plan.Name}
+                </option>
+              ))}
+            </select>
+
+            <label>Selecciona un Nivel</label>
+            <select
+              value={selectedDocumento.NivelId}
+              onChange={(e) => {
+                const nivelId = e.target.value;
+                setSelectedDocumento((prev) => ({
+                  ...prev,
+                  NivelId: nivelId,
+                }));
+                setSelectedNivelId(nivelId);
+              }}
+              required
+            >
+              <option value="" disabled>
+                Selecciona un Nivel
+              </option>
+              {niveles
+                .filter((nivel) => nivel.PlanId === selectedDocumento.PlanId)
+                .map((nivel) => (
+                  <option key={nivel.id} value={nivel.id}>
+                    {nivel.Name}
+                  </option>
+                ))}
+            </select>
+
+            <label>Selecciona una Sección</label>
+            <select
+              value={selectedDocumento.SectionId}
+              onChange={(e) => {
+                const sectionId = e.target.value;
+                setSelectedDocumento((prev) => ({
+                  ...prev,
+                  SectionId: sectionId,
+                }));
+              }}
+              required
+            >
+              <option value="">Selecciona una Sección</option>
+              {section.map((sec) => (
+                <option key={sec.id} value={sec.id}>
+                  {sec.Name}
+                </option>
+              ))}
+            </select>
+
+            <label>Nombre del Archivo</label>
+            <input
+              type="text"
+              value={selectedDocumento.ArchivoName}
+              onChange={(e) =>
+                setSelectedDocumento((prev) => ({
+                  ...prev,
+                  ArchivoName: e.target.value,
+                }))
+              }
+              required
+              disabled
+            />
+            <button type="submit">Guardar Cambios</button>
           </form>
         </div>
       )}

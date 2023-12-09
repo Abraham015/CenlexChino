@@ -40,7 +40,8 @@
     background-color: #fff;
     border: 1px solid #ccc;
     padding: 20px;
-    width: 300px;
+    max-width: 600px; /* Ancho máximo del formulario */
+    width: 100%;
     margin: 20px auto; /* Centra horizontalmente el formulario y agrega margen */
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
@@ -66,7 +67,6 @@
     font-size: 15px;
 }
 
-
 .formulario label:last-child,
 .formulario input:last-child,
 .formulario select:last-child {
@@ -87,6 +87,25 @@
     background-color: #45a049;
 }
 
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+/* Estilos para pantallas más pequeñas */
+@media (max-width: 768px) {
+    .formulario {
+        max-width: 90%; /* Reducir el ancho máximo en pantallas más pequeñas */
+    }
+}
+
 select {
     background-color: var(--button-color);
     font-size: 18px;
@@ -96,14 +115,14 @@ select {
     padding: 1rem;
 }
 
-@media screen and (max-width: 600px) {
-    .buttons {
-        flex-direction: column;
-        align-items: center;
-    }
+    @media screen and (max-width: 600px) {
+        .buttons {
+            flex-direction: column;
+            align-items: center;
+        }
 
-    .buttons button {
-        width: 90%;
-        font-size: 18px;
+        .buttons button {
+            width: 90%;
+            font-size: 18px;
+        }
     }
-}

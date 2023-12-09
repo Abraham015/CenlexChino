@@ -114,33 +114,6 @@ const Home = () => {
     fetchDocumentos();
   }, [selectedNivel, selectedPlan]);
 
-  /*useEffect(() => {
-    const obtenerDatosDesdeFirebase = async () => {
-      try {
-        // Obtener documentos desde Firestore
-        const db = getFirestore(appFirebase);
-        const docsSnapshot = await getDocs(collection(db, "Material"));
-        const docsData = docsSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setDocumentos(docsData);
-
-        // Obtener secciones desde Firestore
-        const secSnapshot = await getDocs(collection(db, "Secciones"));
-        const secData = secSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setSecciones(secData);
-      } catch (error) {
-        console.error("Error al obtener datos desde Firebase:", error);
-      }
-    };
-
-    obtenerDatosDesdeFirebase();
-  }, []);*/
-
   const documentosPorSeccion = documentos.reduce((acc, documento) => {
     const seccion = section.find((s) => s.id === documento.SectionId);
     console.log("Documento:", documento);
